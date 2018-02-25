@@ -4,6 +4,7 @@ import { Document } from "./Document";
 import { isNullOrUndefined } from "util";
 import { IReferenceable } from "../model/interface/IReferenceable";
 import { LibraryReference } from "../model/member/LibraryReference";
+import { LibraryExtractor } from "../extractor/LibraryExtractor";
 
 export class Library extends Document implements IReferenceable<LibraryReference>{
     private _references : LibraryReference[] = [];
@@ -21,7 +22,10 @@ export class Library extends Document implements IReferenceable<LibraryReference
     set libraryName(value){
         if(isNullOrUndefined(value)) throw new ReferenceError("value cannot be null or undefined");
         else{
-            //NEED IMPLEMENTATION
+            LibraryExtractor.KeywordsExtractor(this.libraryName)
+            .then((keywords) => {
+                this.keywords = keywords;
+            })
             this._libraryName = value;
         }
     }
