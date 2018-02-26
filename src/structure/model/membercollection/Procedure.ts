@@ -3,9 +3,9 @@
 import { MemberCollection } from "./MemberCollection";
 import { isNullOrUndefined } from "util";
 import { INamedMember } from "../interface/INamedMember";
-import { Member } from "../Member";
+import { Scope } from "./Scope";
 
-export class Procedure extends MemberCollection<Member> implements INamedMember{
+export class Procedure extends MemberCollection<Scope> implements INamedMember{
     private _name : string; 
 
     get name() : string {return this._name}

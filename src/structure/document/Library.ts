@@ -10,33 +10,25 @@ export class Library extends Document implements IReferenceable<LibraryReference
     private _references : LibraryReference[] = [];
     private static libraries : Map<string, Library> = new Map();
 
-    private _libraryName : string;
-
     private constructor(libraryName: string){
         super()
-        this.libraryName = libraryName;
+        this.name = libraryName;
         Library.libraries.set(libraryName, this);
-    }
-
-    get libraryName(){return this._libraryName}
-    set libraryName(value){
-        if(isNullOrUndefined(value)) throw new ReferenceError("value cannot be null or undefined");
-        else{
-            LibraryExtractor.KeywordsExtractor(this.libraryName)
-            .then((keywords) => {
-                this.keywords = keywords;
-            })
-            this._libraryName = value;
-        }
     }
 
     public static refresh(){
         this.libraries = new Map();
     }
 
-    public static getInstance(libraryName : string){
-        if(this.libraries.has(libraryName)) return this.libraries.get(libraryName);
-        else return new Library(libraryName);
+    public static getInstance(libraryName : string) : Thenable<Library>{
+        return new Promise((resolver, rejecter) => {
+            if(this.libraries.has(libraryName)) resolver(this.libraries.get(libraryName));
+            else{
+                let library = LibraryExtractor.extract(libraryName);
+                this.libraries.set(libraryName, library);
+                resolver(library);
+            }
+        })
     }
 
     get references() : LibraryReference[] {return this._references}

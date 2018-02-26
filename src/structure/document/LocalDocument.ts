@@ -9,8 +9,8 @@ import { TextDocument } from 'vscode';
 import { Settings } from "../model/membercollection/Settings";
 import { IReferenceable } from "../model/interface/IReferenceable";
 import { Resource } from "../model/member/Resource";
-import { LocalDocumentExtractor } from "../extractor/LocalDocumentExtractor";
 import { Keyword } from "../model/membercollection/Keyword";
+import { LocalDocumentExtractor } from "../extractor/LocalDocumentExtractor";
 
 export class LocalDocument extends Document implements IReferenceable<Resource>{
     private _references : Resource[] = [];
@@ -23,38 +23,33 @@ export class LocalDocument extends Document implements IReferenceable<Resource>{
     private _comments : Comment[] = [];
     private _settings : Settings;
 
-    private constructor(textDocument : TextDocument){
+    private constructor(
+        textDocument : TextDocument, testCases : Procedure[], 
+        globalVariables : MemberCollection<Variable<any>>, keywords: Keyword[], 
+        comments : Comment[], settings : Settings){
         super();
-        LocalDocumentExtractor.SettingsExtractor(textDocument)
-        .then((settings) => {
-            this._settings = settings;
-        });
-        LocalDocumentExtractor.GlobalVariablesExtractor(textDocument)
-        .then((globalVariables) => {
-            this._globalVariables = globalVariables;
-        });
-        LocalDocumentExtractor.KeywordsExtractor(textDocument)
-        .then((keywords) => {
-            this.keywords = keywords;
-        });
-        LocalDocumentExtractor.TestCasesExtractor(textDocument)
-        .then((testCases) => {
-            this._testCases = testCases;
-        });
-        LocalDocumentExtractor.CommentsExtractor(textDocument)
-        .then((comments) => {
-            this._comments = comments;
-        });
-        LocalDocument.localDocuments.set(textDocument, this)
+        this._textDocument = textDocument;
+        this.name = textDocument.fileName.replace(/\.(robot|txt)$/g, "");
+        this._testCases = testCases;
+        this._globalVariables = globalVariables;
+        this._keywords = keywords;
+        this._comments = comments;
+        this._settings = settings;
     }
 
     public static refresh(){
         this.localDocuments = new Map();
     }
 
-    public static getInstance(textDocument : TextDocument) : LocalDocument{
-        if(this.localDocuments.has(textDocument)) return this.localDocuments.get(textDocument);
-        else return this.localDocuments.get(textDocument)
+    public static getInstance(textDocument : TextDocument) : Thenable<LocalDocument>{
+        return new Promise((resolver, rejecter) => {
+            if(this.localDocuments.has(textDocument)) resolver(this.localDocuments.get(textDocument));
+            else {
+                let localDocuments = LocalDocumentExtractor.extract(textDocument);
+                this.localDocuments.set(textDocument, localDocuments);
+                resolver(localDocuments);
+            }
+        })
     }
 
     get textDocument() : TextDocument {return this._textDocument}
@@ -66,10 +61,11 @@ export class LocalDocument extends Document implements IReferenceable<Resource>{
     get comments() : Comment[] {return this._comments}
 
     get settings() : Settings {return this._settings}
-
+    set settings(value){
+        this._settings = value;
+    }
     get references() : Resource[] {return this._references}
     set references(value){
         this._references = value;
     }
-
 }
