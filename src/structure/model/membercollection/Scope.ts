@@ -1,20 +1,18 @@
 import { MemberCollection } from "./MemberCollection";
 import { Member } from "../Member";
 import { Location } from "vscode";
+import { INestedMember } from "../interface/INestedMember";
+import { Procedure } from "./Procedure";
 
 'use strict';
 
-export class Scope extends MemberCollection<Member>{
-    private _deep : Number = 0;
+export class Scope<TRoot extends Procedure> extends MemberCollection<Member> implements INestedMember<TRoot>{
+    private _root : TRoot;
 
-    public constructor(location: Location, deep : Number){
+    public constructor(location: Location, root : TRoot){
         super(location)
-        this._deep = deep;
+        this._root = root;
     }
 
-    get deep() : Number { return this._deep }
-    set deep(value) {
-        if(value < 0) throw new ReferenceError("deep cannot be minus");
-        else this._deep = value;
-    }
+    get root() : TRoot { return this._root }
 }

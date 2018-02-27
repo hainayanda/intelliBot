@@ -1,9 +1,13 @@
 import { Keyword } from "../model/membercollection/Keyword";
-import { Library } from "../document/Library";
+import { Library } from "../model/document/Library";
 
 export class LibraryExtractor {
-    public static extract(libraryName : string) : Library{
-        //NEED IMPLEMENTATION
-        return null;
+
+    private static libraries : Map<string, Library> = new Map();
+
+    public static extract(libraryName : string) : Thenable<Library> {
+        return new Promise<Library>((resolve, reject) => {
+            //NEED IMPLEMENTATION
+        })
     }
 }

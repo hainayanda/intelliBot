@@ -11,6 +11,12 @@ export class Keyword extends Procedure implements IKeyword, IReferenceable<Keywo
     private _arguments : string[] = [];
     private _returnValue : string;
 
+    get fullName() : string {
+        let matches = this.location.uri.fsPath.match(/[^\/\\]+$/g)
+        let fileName = matches[0].replace(/(\.txt|\.robot)$/g, "");
+        return fileName + "." + this.name;
+    }
+
     get arguments() : string[] {return this._arguments}
     set arguments(value){
         if(isNullOrUndefined(value)) value = [];

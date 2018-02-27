@@ -1,7 +1,7 @@
 'use strict';
 
-import { Keyword } from '../model/membercollection/Keyword';
 import { isNullOrUndefined } from 'util';
+import { Keyword } from '../membercollection/Keyword';
 
 export class Document {
 

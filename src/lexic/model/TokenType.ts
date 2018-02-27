@@ -1,0 +1,20 @@
+export enum TokenType {
+    SettingsSectionHeader,
+    GlobalVariablesSectionHeader,
+    TestCasesSectionHeader,
+    KeywordSectionHeader,
+    SettingsType,
+    Resource,
+    VariableDeclaration,
+    PlainStaticValue,
+    TestCasesHeader,
+    KeywordHeader,
+    KeywordAttribute,
+    Argument,
+    KeywordPointer,
+    VariablePointer,
+    JavaScript,
+    Eval,
+    Assignment,
+    Unknown
+}

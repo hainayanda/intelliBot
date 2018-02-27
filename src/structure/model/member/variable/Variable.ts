@@ -1,11 +1,11 @@
 'use strict';
 
-import { Member } from "../Member";
+import { Member } from "../../Member";
 import { isNullOrUndefined } from "util";
 import { Location } from "vscode";
-import { INamedMember } from "../interface/INamedMember";
-import { IKeyedValuedMember } from "../interface/IKeyedValuedMember";
-import { IReferenceable } from "../interface/IReferenceable";
+import { INamedMember } from "../../interface/INamedMember";
+import { IKeyedValuedMember } from "../../interface/IKeyedValuedMember";
+import { IReferenceable } from "../../interface/IReferenceable";
 import { VariablePointer } from "./VariablePointer";
 
 export class Variable<T> extends Member implements IKeyedValuedMember<T>, IReferenceable<VariablePointer<any>> {
