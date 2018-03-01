@@ -8,12 +8,12 @@ import { IKeyedValuedMember } from "../../interface/IKeyedValuedMember";
 import { IReferenceable } from "../../interface/IReferenceable";
 import { VariablePointer } from "./VariablePointer";
 
-export class Variable<T> extends Member implements IKeyedValuedMember<T>, IReferenceable<VariablePointer<any>> {
-    private _references : VariablePointer<any>[] = [];
+export class Variable<TValue> extends Member implements IKeyedValuedMember<TValue>, IReferenceable<VariablePointer<TValue>> {
+    private _references : VariablePointer<TValue>[] = [];
     private _name : string; 
-    private _value : T;
+    private _value : TValue;
     
-    public constructor(location : Location, name : string, value : T){
+    public constructor(location : Location, name : string, value : TValue){
         super(location)
         this.name = name;
         this.value = value;
@@ -25,13 +25,13 @@ export class Variable<T> extends Member implements IKeyedValuedMember<T>, IRefer
         else this._name = val;
     }
 
-    get value() : T {return this._value}
+    get value() : TValue {return this._value}
     set value(val){
         if(isNullOrUndefined(val)) throw new ReferenceError("value cannot be null or undefined")
         else this._value = val;
     }
 
-    get references() : VariablePointer<any>[] {return this._references}
+    get references() : VariablePointer<TValue>[] {return this._references}
     set references(value){
         this._references = value;
     }

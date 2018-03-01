@@ -6,7 +6,7 @@ import { INamedMember } from "../interface/INamedMember";
 import { Scope } from "./Scope";
 import { Location } from "vscode";
 
-export class Procedure extends MemberCollection<any> implements INamedMember{
+export class Procedure extends MemberCollection implements INamedMember{
     private _name : string; 
 
     get name() : string {return this._name}

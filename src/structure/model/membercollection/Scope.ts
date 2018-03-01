@@ -6,7 +6,7 @@ import { Procedure } from "./Procedure";
 
 'use strict';
 
-export class Scope<TRoot extends Procedure> extends MemberCollection<Member> implements INestedMember<TRoot>{
+export class Scope<TRoot extends Procedure> extends MemberCollection implements INestedMember<TRoot>{
     private _root : TRoot;
 
     public constructor(location: Location, root : TRoot){

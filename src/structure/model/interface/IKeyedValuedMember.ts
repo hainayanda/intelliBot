@@ -2,6 +2,6 @@
 
 import { INamedMember } from "./INamedMember";
 
-export interface IKeyedValuedMember<T> extends INamedMember {
-    value : T;
+export interface IKeyedValuedMember<TValue> extends INamedMember {
+    value : TValue;
 }

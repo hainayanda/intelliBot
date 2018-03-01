@@ -12,19 +12,20 @@ import { Variable } from "../member/variable/Variable";
 import { Comment } from "../member/Comment";
 import { Keyword } from "../membercollection/Keyword";
 import { Settings } from "../membercollection/Settings";
+import { Variables } from "../membercollection/Variables";
 
 export class LocalDocument extends Document implements IReferenceable<Resource>{
     private _references : Resource[] = [];
 
     private _textDocument : TextDocument;
     private _testCases : Procedure[] = []
-    private _globalVariables : MemberCollection<Variable<any>>;
+    private _globalVariables : Variables;
     private _comments : Comment[] = [];
     private _settings : Settings;
 
     public constructor(
         textDocument : TextDocument, testCases : Procedure[], 
-        globalVariables : MemberCollection<Variable<any>>, keywords: Keyword[], 
+        globalVariables : Variables, keywords: Keyword[], 
         comments : Comment[], settings : Settings){
         super();
         this._textDocument = textDocument;
@@ -40,7 +41,7 @@ export class LocalDocument extends Document implements IReferenceable<Resource>{
     
     get testCases() : Procedure[] {return this._testCases}
 
-    get globalVariables() : MemberCollection<Variable<any>> {return this._globalVariables}
+    get globalVariables() : Variables {return this._globalVariables}
 
     get comments() : Comment[] {return this._comments}
 
@@ -67,14 +68,14 @@ export class LocalDocument extends Document implements IReferenceable<Resource>{
     }
 
     private allAvailableGlobalVariableScanner(container : Variable<any>[], scannedDocuments : LocalDocument[]) : Thenable<Variable<any>[]>{
-        container = container.concat(this._globalVariables.members)
+        container = container.concat(this._globalVariables.variables)
         let resources = this.settings.resources
         let futureVariable : Thenable<Variable<any>[]>;
         resources.forEach(resource => {
             let resCallBack = (document : LocalDocument) => {
                 if(scannedDocuments.indexOf(document) < 0) return container;
                 scannedDocuments.push(document);
-                container = container.concat(this.globalVariables.members);
+                container = container.concat(this.globalVariables.variables);
                 return document.allAvailableGlobalVariableScanner(container, scannedDocuments);
             }
             if(futureVariable == null){

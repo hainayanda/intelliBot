@@ -1,5 +1,5 @@
 import { Reference } from "../Reference";
 
-export interface IReferenceable <T extends Reference<any>>{
-    references : T[];
+export interface IReferenceable <TReferences extends Reference<any>>{
+    references : TReferences[];
 }
