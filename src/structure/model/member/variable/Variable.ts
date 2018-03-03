@@ -3,20 +3,26 @@
 import { Member } from "../../Member";
 import { isNullOrUndefined } from "util";
 import { Location } from "vscode";
-import { INamedMember } from "../../interface/INamedMember";
-import { IKeyedValuedMember } from "../../interface/IKeyedValuedMember";
 import { IReferenceable } from "../../interface/IReferenceable";
-import { VariablePointer } from "./VariablePointer";
+import { VariableReference } from "./VariableReference";
 
-export class Variable<TValue> extends Member implements IKeyedValuedMember<TValue>, IReferenceable<VariablePointer<TValue>> {
-    private _references : VariablePointer<TValue>[] = [];
+export class Variable<TRoot, TValue> extends Member<TRoot> implements IReferenceable<VariableReference<any, Variable<TRoot, TValue>>> {
+    private _nameLocation : Location;
+    private _references : VariableReference<any, Variable<TRoot, TValue>>[] = [];
     private _name : string; 
     private _value : TValue;
     
-    public constructor(location : Location, name : string, value : TValue){
+    public constructor(location : Location, nameLocation : Location, name : string, value : TValue){
         super(location)
+        this._nameLocation = nameLocation;
         this.name = name;
         this.value = value;
+    }
+
+    get nameLocation() {return this._nameLocation}
+    set nameLocation(val){
+        if(isNullOrUndefined(val)) throw new ReferenceError("name cannot be null or undefined")
+        else this._nameLocation = val;
     }
 
     get name() : string {return this._name}
@@ -31,7 +37,7 @@ export class Variable<TValue> extends Member implements IKeyedValuedMember<TValu
         else this._value = val;
     }
 
-    get references() : VariablePointer<TValue>[] {return this._references}
+    get references() : VariableReference<any, Variable<TRoot, TValue>>[] {return this._references}
     set references(value){
         this._references = value;
     }

@@ -6,10 +6,16 @@ import { Token } from "./Token";
 export class TokenLine {
 
     private _line : TextLine;
-    private _tokens : Token[] = [];
+    private _tokens : Token[];
 
     constructor(line : TextLine, tokens : Token[]){
         this._line = line;
+        if(tokens = null) tokens = [];
+        tokens.sort((a, b) => {
+            if(a.location.range.start < b.location.range.start) return -1;
+            else if(a.location.range.start > b.location.range.start) return 1;
+            else return 0;
+        })
         this._tokens = tokens;
     }
 

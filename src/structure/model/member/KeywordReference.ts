@@ -2,10 +2,11 @@
 
 import { Reference } from "../Reference";
 import { Keyword } from "../membercollection/Keyword";
-import { IKeyword } from "../interface/IKeyword";
 import { isNullOrUndefined } from "util";
+import { Procedure } from "../membercollection/Procedure";
+import { Member } from "../Member";
 
-export class KeywordPointer extends Reference<Keyword> implements IKeyword{
+export class KeywordReference<TRoot extends Member<any>> extends Reference<TRoot, Keyword>{
     get name() : string {return this.origin.name}
     get arguments() : string[] {return this.origin.arguments}
     get returnValue() : string {return this.origin.returnValue}

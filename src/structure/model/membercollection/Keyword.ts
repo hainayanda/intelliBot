@@ -1,20 +1,17 @@
 'use strict';
 
 import { Procedure } from "./Procedure";
-import { IKeyword } from "../interface/IKeyword";
 import { isNullOrUndefined } from "util";
 import { IReferenceable } from "../interface/IReferenceable";
-import { KeywordPointer } from "../member/KeywordPointer";
+import { KeywordReference } from "../member/KeywordReference";
 
-export class Keyword extends Procedure implements IKeyword, IReferenceable<KeywordPointer> {
-    private _references : KeywordPointer[] = [];
+export class Keyword extends Procedure implements IReferenceable<KeywordReference<any>> {
+    private _references : KeywordReference<any>[] = [];
     private _arguments : string[] = [];
     private _returnValue : string;
 
     get fullName() : string {
-        let matches = this.location.uri.fsPath.match(/[^\/\\]+$/g)
-        let fileName = matches[0].replace(/(\.txt|\.robot)$/g, "");
-        return fileName + "." + this.name;
+        return this.root.name + "." + this.name;
     }
 
     get arguments() : string[] {return this._arguments}
@@ -28,7 +25,7 @@ export class Keyword extends Procedure implements IKeyword, IReferenceable<Keywo
         this._returnValue = value;
     }
 
-    get references() : KeywordPointer[] {return this._references}
+    get references() : KeywordReference<any>[] {return this._references}
     set references(value){
         this._references = value;
     }

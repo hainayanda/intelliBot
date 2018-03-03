@@ -4,9 +4,9 @@ import { Reference } from "../Reference";
 import { LocalDocument } from "../document/LocalDocument";
 import { isNullOrUndefined } from "util";
 import { Location, Uri, workspace, TextDocument } from "vscode";
-import { LocalDocumentExtractor } from "../../extractor/LocalDocumentExtractor";
+import { LocalDocumentExtractor } from "../../../extractor/LocalDocumentExtractor";
 
-export class Resource extends Reference<Thenable<LocalDocument>>{
+export class Resource extends Reference<LocalDocument, Thenable<LocalDocument>>{
     private _path : string;
 
     public constructor(location : Location, path : string) {

@@ -17,13 +17,13 @@ export class Util {
     }
     
     public static extractKeywordArgument(instruction : Instruction): Token{
-        if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) return Token.getInstance(instruction, TokenType.VariablePointer)
+        if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) return Token.getInstance(instruction, TokenType.VariableReference)
         else return Token.getInstance(instruction, TokenType.PlainStaticValue)
     }
 
     public static extractKeywordPointer(instruction : Instruction): Token[]{
         let tokens : Token[] = [];
-        if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) return [Token.getInstance(instruction, TokenType.VariablePointer)];
+        if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) return [Token.getInstance(instruction, TokenType.VariableReference)];
         let subInstruction = instruction.text.split('.');
         let uri = instruction.location.uri;
         let lineNumber = instruction.location.range[0].lineNumber
@@ -43,13 +43,13 @@ export class Util {
                     new Position(lineNumber, start),
                     new Position(lineNumber, end))
                 if(i == 0 && subInstruction.length > 1) {
-                    tokens.push(new Token(new Location(uri, range), sub, TokenType.ResourcePointer))
+                    tokens.push(new Token(new Location(uri, range), sub, TokenType.ResourceReference))
                     let dotRange = new Range(
                         new Position(lineNumber, end + 1),
                         new Position(lineNumber, end + 1))
                     tokens.push(new Token(new Location(uri, dotRange), sub, TokenType.Specifier))
                 }
-                else if(i == 0 || i == 1) tokens.push(new Token(new Location(uri, range), sub, TokenType.KeywordPointer));
+                else if(i == 0 || i == 1) tokens.push(new Token(new Location(uri, range), sub, TokenType.KeywordReference));
                 else tokens.push(new Token(new Location(uri, range), sub, TokenType.UnExpectedToken));
             }
             start = end + 2;
@@ -73,16 +73,6 @@ export class Util {
             instructions.push(new Instruction(instructionText, location))
         });
         return instructions;
-    }
-
-    public static analyzeNothing(uri : Uri, line : TextLine) : TokenLine {
-        let tokens : Token[] = this.extractComment(uri, line);
-        let text = line.text;
-        if(tokens.length > 0) text = this.removeCommentFrom(line);
-        text = text.trimRight();
-        if(text.length == 0) return new TokenLine(line, tokens);
-        //NEED IMPLEMENTATION
-        return new TokenLine(line, tokens);
     }
 
     public static getSpaceRange(text : string, start: number, lineNumber : number) : Range{
@@ -132,60 +122,6 @@ export class Util {
         let tokens : Token[] = [];
         let commentToken = this.getCommentToken(uri, line);
         if(commentToken != null) tokens.push(commentToken);
-        return tokens;
-    }
-
-    public static splitPlainWithVariable(uri: Uri, lineNumber : number, instruction : Instruction) : Token[]{
-        let tokens : Token[] = [];
-        let matches = instruction.text.match(/\$\{[\{\}]+\}/g);
-        matches.forEach(match => {
-            let start = 0
-            let index = instruction.text.indexOf(match, start);
-            while(index != -1){
-                start = index + match.length;
-                let end = start -1;
-                let range = new Range(new Position(lineNumber, index), new Position(lineNumber, end));
-                let location = new Location(uri, range);
-                tokens.push(new Token(location, match, TokenType.VariablePointer));
-                index = instruction.text.indexOf(match, start);
-            }
-        });
-        tokens.sort((a, b) => {
-            let aPos = a.location.range.start.character
-            let bPos = b.location.range.start.character
-            if(aPos < bPos) return -1;
-            else if( aPos > bPos) return 1;
-            else return 0;
-        });
-        if(tokens.length == 1){
-            let start = 0;
-            let end = tokens[0].location.range.start.character -1;
-            if(end != start && end >= 0)
-                tokens.push(this.getPlainStaticValueToken(uri, start, end, lineNumber, instruction));
-            start = tokens[0].location.range.end.character + 1;
-            end = instruction.text.length - 1;
-            tokens.push(this.getPlainStaticValueToken(uri, start, end, lineNumber, instruction));
-        }
-        else if(tokens.length > 1){
-            let start = 0;
-            let end = tokens[0].location.range.start.character -1;
-            if(end != start && end >= 0)
-                tokens.push(this.getPlainStaticValueToken(uri, start, end, lineNumber, instruction));
-            for(let i = 1; i < tokens.length - 1; i++){
-                let firstToken = tokens[i];
-                let secondToken = tokens[i + 1]
-                let start = firstToken.location.range.end.character + 1;
-                let end = secondToken.location.range.start.character - 1;
-                tokens.push(this.getPlainStaticValueToken(uri, start, end, lineNumber, instruction));
-            }
-            let lastToken = tokens[tokens.length -1];
-            let lastIndex = lastToken.location.range.end.character;
-            end = instruction.text.length - 1
-            if(lastIndex < end){
-                let start = lastIndex + 1;
-                tokens.push(this.getPlainStaticValueToken(uri, start, end, lineNumber, instruction));
-            }
-        }
         return tokens;
     }
 

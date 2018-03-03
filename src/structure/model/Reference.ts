@@ -3,8 +3,9 @@
 import { Member } from "./Member";
 import { isNullOrUndefined } from "util";
 import { Location } from "vscode";
+import { Settings } from "http2";
 
-export abstract class Reference<TOrigin> extends Member{
+export abstract class Reference<TRoot, TOrigin> extends Member<TRoot>{
     private _origin : TOrigin
 
     public constructor(location : Location, origin : TOrigin) {

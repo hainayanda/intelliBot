@@ -4,11 +4,13 @@ import { Uri, TextLine, Range, Location, Position } from "vscode";
 import { TokenLine } from "../model/TokenLine";
 import { TokenType } from "../model/TokenType";
 import { Instruction } from "../model/Instruction";
+import { VariableAnalyzer } from "./VariableAnalyzer";
 
 'use strict'
 
 export class ProcedureAnalyzer {
-    public static analyzeKeywordHeader(uri : Uri, line : TextLine) : TokenLine {
+
+    private static analyzeProcedureHeader(uri : Uri, line : TextLine, procedureType : TokenType) : TokenLine {
         let tokens : Token[] = Util.extractComment(uri, line);
         let text = line.text;
         if(tokens.length > 0) text = Util.removeCommentFrom(line);
@@ -17,28 +19,20 @@ export class ProcedureAnalyzer {
         let instructions = Util.extractInstruction(uri, line)
         for(let i = 0; i < instructions.length; i++){
             let instruction = instructions[i];
-            if(i == 0) tokens.push(Token.getInstance(instruction, TokenType.KeywordHeader))
+            if(i == 0) tokens.push(Token.getInstance(instruction, procedureType))
             else tokens.push(Token.getInstance(instruction, TokenType.UnExpectedToken))
         }
         return new TokenLine(line, tokens);
+    }
+    public static analyzeKeywordHeader(uri : Uri, line : TextLine) : TokenLine {
+        return this.analyzeProcedureHeader(uri, line, TokenType.KeywordHeader);
     }
 
     public static analyzeTestCaseHeader(uri : Uri, line : TextLine) : TokenLine {
-        let tokens : Token[] = Util.extractComment(uri, line);
-        let text = line.text;
-        if(tokens.length > 0) text = Util.removeCommentFrom(line);
-        text = text.trimRight();
-        if(text.length == 0) return new TokenLine(line, tokens);
-        let instructions = Util.extractInstruction(uri, line)
-        for(let i = 0; i < instructions.length; i++){
-            let instruction = instructions[i];
-            if(i == 0) tokens.push(Token.getInstance(instruction, TokenType.TestCaseHeader))
-            else tokens.push(Token.getInstance(instruction, TokenType.UnExpectedToken))
-        }
-        return new TokenLine(line, tokens);
+        return this.analyzeProcedureHeader(uri, line, TokenType.TestCaseHeader);
     }
 
-    public static analyzeKeywordReturn(uri : Uri, line : TextLine) : TokenLine {
+    public static analyzeReturnKeyword(uri : Uri, line : TextLine) : TokenLine {
         let tokens : Token[] = Util.extractComment(uri, line);
         let text = line.text;
         if(tokens.length > 0) text = Util.removeCommentFrom(line);
@@ -49,7 +43,7 @@ export class ProcedureAnalyzer {
             let instruction = instructions[i];
             if(i == 0) tokens.push(Token.getInstance(instruction, TokenType.KeywordAttribute))
             else if (i == 1){
-                if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) tokens.push(Token.getInstance(instruction, TokenType.VariablePointer))
+                if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) tokens.push(Token.getInstance(instruction, TokenType.VariableReference))
                 else tokens.push(Token.getInstance(instruction, TokenType.PlainStaticValue))
             }
             else tokens.push(Token.getInstance(instruction, TokenType.UnExpectedToken))
@@ -68,7 +62,7 @@ export class ProcedureAnalyzer {
         for(let i = 0; i < instructions.length; i++){
             let instruction = instructions[i];
             if(i == 0) tokens.push(Token.getInstance(instruction, TokenType.KeywordAttribute));
-            else if(/^\$\{[^\{\}]+\}$/g.test(instruction.text)) 
+            else if(/^[\$\@\&]\{[^\{\}]+\}$/g.test(instruction.text)) 
                 tokens.push(Token.getInstance(instruction, TokenType.VariableDeclaration));
             else tokens.push(Token.getInstance(instruction, TokenType.UnExpectedToken))
         }
@@ -88,13 +82,13 @@ export class ProcedureAnalyzer {
         for(let i = 0; i < instructions.length; i++){
             let instruction = instructions[i];
             if(isStartOfTheInstruction){
-                if(/^[\$\@]\{[\{\}]+\}$/g.test(instruction.text)){
+                if(/^[\$\@\&]\{[\{\}]+\}$/g.test(instruction.text)){
                     tokens.push(Token.getInstance(instruction, TokenType.VariableDeclaration))
                     isCanBeVarDeclaration = false;
                     isStartOfTheInstruction = false;
                 }
-                else if(/^[\$\@]\{[\{\}]+\}\s?=$/g.test(instruction.text)){
-                    tokens = tokens.concat(this.splitDeclarationAssignment(uri, line.lineNumber, instruction))
+                else if(/^[\$\@\&]\{[\{\}]+\}\s?=$/g.test(instruction.text)){
+                    tokens = tokens.concat(VariableAnalyzer.splitDeclarationAssignment(uri, line.lineNumber, instruction))
                     isStartOfTheInstruction = false;
                 }
                 else if(/^\.{2,}$/g.test(instruction.text) || /^[\\\/]{1,}$/g.test(instruction.text))
@@ -108,42 +102,34 @@ export class ProcedureAnalyzer {
                 else if(/\$\{[\{\}]+\}/g.test(instruction.text))
                     tokens.push(Token.getInstance(instruction, TokenType.UnExpectedToken))
                 else{
-                    tokens.push(Token.getInstance(instruction, TokenType.KeywordPointer))
+                    tokens.push(Token.getInstance(instruction, TokenType.KeywordReference))
                     isCanBeKeywordCalling = false;
                     let isStartOfTheInstruction = false;
                 }
             }
             else{
-                if(isCanBeVarDeclaration && /^[\$\@]\{[\{\}]+\}\s?=$/g.test(instruction.text))
-                    tokens = tokens.concat(this.splitDeclarationAssignment(uri, line.lineNumber, instruction))
-                else if(/^\$\{[\{\}]+\}$/g.test(instruction.text))
-                    tokens.push(Token.getInstance(instruction, TokenType.VariablePointer))
-                else if(/\$\{[\{\}]+\}/g.test(instruction.text))
-                    tokens = tokens.concat(Util.splitPlainWithVariable(uri, line.lineNumber, instruction))
-                else if(instruction.text == "PASS" || instruction.text == "FAIL")
+                if(isCanBeVarDeclaration && /^[\$\@\&]\{[\{\}]+\}\s?=$/g.test(instruction.text))
+                    tokens = tokens.concat(VariableAnalyzer.splitDeclarationAssignment(uri, line.lineNumber, instruction))
+                else if(/^\$\{[\{\}]+\}$/g.test(instruction.text)){
+                    tokens.push(Token.getInstance(instruction, TokenType.VariableReference))
+                    isCanBeVarDeclaration = false;
+                }
+                else if(/\$\{[\{\}]+\}/g.test(instruction.text)){
+                    tokens = tokens.concat(VariableAnalyzer.splitPlainWithVariable(uri, line.lineNumber, instruction))
+                    isCanBeVarDeclaration = false;
+                }
+                else if(instruction.text == "PASS" || instruction.text == "FAIL"){
                     tokens.push(Token.getInstance(instruction, TokenType.PlainStaticValue))
+                    isCanBeVarDeclaration = false;
+                }
                 else if(isCanBeKeywordCalling){
-                    tokens.push(Token.getInstance(instruction, TokenType.KeywordPointer))
+                    tokens.push(Token.getInstance(instruction, TokenType.KeywordReference))
                     isCanBeKeywordCalling = false;
+                    isCanBeVarDeclaration = false;
                 }
                 else tokens.push(Token.getInstance(instruction, TokenType.PlainStaticValue))
             }
         }
         return new TokenLine(line, tokens);
-    }
-
-    public static splitDeclarationAssignment(uri: Uri, lineNumber : number, instruction : Instruction) : Token[]{
-        let tokens : Token[] = [];
-        let start = instruction.location.range.start
-        let end = instruction.text.lastIndexOf('}');
-        let range = new Range(start, new Position(lineNumber, end));
-        let location = new Location(uri, range);
-        let variable = instruction.text.substring(0, end);
-        tokens.push(new Token(location, variable, TokenType.VariableDeclaration));
-        tokens.push(new Token(
-                new Location(
-                    uri, new Position(lineNumber, instruction.text.length - 1)),
-                '=', TokenType.Assignment));
-        return tokens;
     }
 }

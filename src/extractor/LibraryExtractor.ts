@@ -1,5 +1,5 @@
-import { Keyword } from "../model/membercollection/Keyword";
-import { Library } from "../model/document/Library";
+import { Keyword } from "../structure/model/membercollection/Keyword";
+import { Library } from "../structure/model/document/Library";
 
 export class LibraryExtractor {
 
